@@ -44,6 +44,7 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
+     <Compile Include="Assets\Extensions.cs" />
      <Compile Include="Assets\LegsScript.cs" />
      <Compile Include="Assets\PreyScript.cs" />
      <Compile Include="Assets\ScoreScript.cs" />
