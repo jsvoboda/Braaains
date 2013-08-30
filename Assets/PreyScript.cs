@@ -8,8 +8,9 @@ public class PreyScript : MonoBehaviour
     public GameObject Walls;
     public GameObject Zombie;
     public GameObject ScoreDaemon;
-    public float FleeDistance;
+    //public float FleeDistance;
 
+    PreyState state = new PreyState();
     bool isFleeing;
     Vector3 currentDirection;
     Vector3 desiredDirection;
@@ -21,10 +22,9 @@ public class PreyScript : MonoBehaviour
         int vectCount = 8;
         for (int i = 0; i < vectCount; i++)
         {
-            Vector3 v = Quaternion.Euler(0, i * (360/vectCount), 0) * new Vector3(1, 0, 0);
+            Vector3 v = Quaternion.Euler(0, i * (360 / vectCount), 0) * new Vector3(1, 0, 0);
             castingDirections.Add(v);
         }
-
 
         currentDirection = (Random.rotation * new Vector3(1, 1, 1)).nullYAxis();
         desiredDirection = (Random.rotation * new Vector3(1, 1, 1)).nullYAxis().normalized;
@@ -32,34 +32,90 @@ public class PreyScript : MonoBehaviour
 
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            spawnPrey(1);
+        }
+
         steering = (desiredDirection - currentDirection) * 0.1f;
         currentDirection = currentDirection + steering;
 
-        transform.Translate(currentDirection.nullYAxis() * Time.deltaTime * 3);
+        if (state.CanRelax())
+        {
+            Debug.Log("a"); 
+            desiredDirection = Quaternion.Euler(0, Random.Range(-60, 60), 0)
+                * currentDirection;
+        }
+
+        if (steering.magnitude < 0.001)
+        {
+            desiredDirection = Quaternion.Euler(0, Random.Range(-60, 60), 0)
+                * currentDirection;
+        }
+
+        transform.Translate(currentDirection.nullYAxis() * Time.deltaTime * 1.5f);
     }
 
-    void OnTriggerEnter(Collider other)
+    public void WallInRadius(Collider wall)
     {
-        if (other.collider.gameObject.name == "Walls")
-        {
-            desiredDirection = - directionTo(other.collider.gameObject);
-        }
-
-        if (other.collider.gameObject.name == "Zombie")
-        {
-            ScoreDaemon.GetComponent<ScoreScript>().IncrementScore();
-            Destroy(this.gameObject);
-        }
+        Debug.Log("WallInRadius");
+        state.NearWall = true;
+        desiredDirection = -directionTo(wall.collider.gameObject);
     }
+
+    public void WallOutOfRadius()
+    {
+        Debug.Log("WallOutOfRadius");
+        state.NearWall = false;
+    }
+
+    public void PreyInRadius(Collider prey)
+    {
+        Debug.Log("PreyInRadius");
+        //desiredDirection = -directionTo(prey.collider.gameObject);
+        ////desiredDirection = Vector3.Lerp(desiredDirection, -directionTo(prey.collider.gameObject), .5f);
+    }
+
+    public void ZombieInRadius(Collider zombie)
+    {
+        Debug.Log("ZombieInRadius");
+        state.NearZombie = true;
+        desiredDirection = -directionTo(zombie.collider.gameObject);
+    }
+
+    //void OnTriggerEnter(Collider other)
+    //{
+
+    //    if (other.collider.gameObject.name == "Walls")
+    //    {
+    //        desiredDirection = - directionTo(other.collider.gameObject);
+    //    }
+
+    //    if (other.collider.gameObject.name == "Zombie")
+    //    {
+    //        ScoreDaemon.GetComponent<ScoreScript>().IncrementScore();
+    //        Destroy(this.gameObject);
+    //    }
+    //}
+
+    //void OnTriggerStay(Collider other)
+    //{
+    //    if (other.collider.gameObject.name == "Walls")
+    //    {
+    //        desiredDirection = -directionTo(other.collider.gameObject);
+    //    }
+
+    //}
 
     //Approximate direction from this to closest point of the other object
     Vector3 directionTo(GameObject other)
     {
         List<RaycastHit> hits = new List<RaycastHit>();
-
+        float distance = 3;
         foreach (var d in castingDirections)
         {
-            hits.AddRange(Physics.SphereCastAll(this.transform.position, 0.1f, d));
+            //hits.AddRange(Physics.SphereCastAll(this.transform.position, 0.2f, d));
+            hits.AddRange(Physics.RaycastAll(this.transform.position, d, distance));
         }
 
         RaycastHit closest = hits[0];
@@ -73,7 +129,27 @@ public class PreyScript : MonoBehaviour
             }
         }
 
-        return Quaternion.Euler(0, Random.Range(-50, 50), 0)
+        return Quaternion.Euler(0, Random.Range(-80, 80), 0)
             * (closest.point - this.transform.position).normalized;
+    }
+
+    void spawnPrey(int count)
+    {
+        Object original = (Object)this.gameObject;
+        for (int i = 0; i < count; i++)
+        {
+            var clone = Instantiate(original);
+        }
+    }
+}
+
+public class PreyState
+{
+    public bool NearZombie { get; set; }
+    public bool NearWall { get; set; }
+
+    public bool CanRelax()
+    {
+        return !(NearWall || NearZombie);
     }
 }
