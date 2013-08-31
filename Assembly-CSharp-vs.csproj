@@ -46,10 +46,9 @@
   <ItemGroup>
      <Compile Include="Assets\Extensions.cs" />
      <Compile Include="Assets\LegsScript.cs" />
-     <Compile Include="Assets\PreyCollider1.cs" />
-     <Compile Include="Assets\PreyCollider2.cs" />
      <Compile Include="Assets\PreyScript.cs" />
      <Compile Include="Assets\ScoreScript.cs" />
+     <Compile Include="Assets\Tuple.cs" />
      <Compile Include="Assets\ZombieScript.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
